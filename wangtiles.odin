@@ -21,8 +21,9 @@ World :: struct {
 
 
 
+
+
 Tile :: struct {
-	source: rl.Rectangle,
 }
 
 
@@ -33,7 +34,79 @@ getSourceRect :: proc(tile: i32) -> rl.Rectangle {
 	return {f32(x * 64), f32(y * 64), 64, 64}
 }
 
+//Tilesheet, Bitwise order
+Connectedness :: enum {
+	None,	//	0000
+	___E,	//	0001 -> 0100
+	__S_,	//	0010 -> 1000
+	__SE,	//	0011
 
+	_W__,	//	0100 -> 0001
+	_W_E,	//	0101
+	_WS_,	//	0110
+	_WSE,	//	0111
+
+	N___,	//	1000 -> 0010
+	N__E,	//	1001
+	N_S_,	//	1010
+	N_SE,	//	1011
+
+	NW__,	//	1100
+	NW_E,	//	1101
+	NWS_,	//	1110
+	NWSE	//	1111
+}
+
+
+generate :: proc(w : World) -> []rl.Rectangle {
+	t := make([]rl.Rectangle, w.size)
+	for y:i32 = 0; y < w.height; y += 1 {
+		for x:i32 = 0; x < w.width; x += 1 {
+			index := y * w.width + x
+
+			left  := y * w.width + ((x - 1) %% w.width )
+			right := y * w.width + ((x + 1) %% w.width )
+			up    := ((y - 1) %% w.height ) * w.width + x
+			down  := ((y + 1) %% w.height ) * w.width + x
+
+			connected_N : bool = (w.tile[up]   & cast(i32)Connectedness.__S_) == cast(i32)Connectedness.__S_
+			connected_W : bool = (w.tile[left] & cast(i32)Connectedness.___E) == cast(i32)Connectedness.___E
+			connected_S : bool = (w.tile[down] & cast(i32)Connectedness.N___) == cast(i32)Connectedness.N___
+			connected_E : bool = (w.tile[right] & cast(i32)Connectedness._W__) == cast(i32)Connectedness._W__
+
+			// if index == 23 {
+			// 	w.tile[index] = 6
+			// 	w.tile[up] = 15
+			// 	w.tile[down] = 15
+			// 	w.tile[left] = 15
+			// 	w.tile[right] = 15
+			// }
+			if index == 0 {
+				w.tile[index] = cast(i32)Connectedness.__SE
+			}
+			if index > 0 {
+				if connected_N {
+					w.tile[index] = (cast(i32)Connectedness.N___)
+				}
+				if connected_W {
+					w.tile[index] = w.tile[index] | cast(i32)Connectedness._W__
+				}
+				// if connected_S {
+				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.__S_
+				// }
+				// if connected_E {
+				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.___E
+				// }
+				w.tile[index] |= rl.GetRandomValue(0,2)
+			}
+			
+		}
+	}
+	for i:i32 = 0; i < w.size; i+=1 {
+		t[i] = getSourceRect(w.tile[i])
+	}
+	return t
+}
 
 main :: proc() {
 	window := Window{"wang maze", 768, 768}
@@ -45,20 +118,17 @@ main :: proc() {
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
 
-
-	tilemap : rl.Texture2D = rl.LoadTexture("tilemap.png"); 
+	rl.ChangeDirectory(rl.GetApplicationDirectory())
+	tilemap : rl.Texture2D = rl.LoadTexture("tilemap_bitwise.png"); 
 	
-	tiles := make([]rl.Rectangle, world.size)
-
-	for i : i32 = 0; i < world.size; i += 1 {
-		world.tile[i] = rl.GetRandomValue(0,16)
-		tiles[i] = getSourceRect(world.tile[i])
-	}
-
-
 	
+	tiles := generate(world)
+	
+
 	for !rl.WindowShouldClose() {
-
+		if rl.IsKeyPressed(.SPACE) {
+			tiles = generate(world)
+		}
 
 		rl.BeginDrawing()
 		rl.ClearBackground(rl.BLACK)
