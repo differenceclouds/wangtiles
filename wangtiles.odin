@@ -75,27 +75,26 @@ generate :: proc(world : World) -> []rl.Rectangle {
 			connected_S : bool = (w[down] & cast(i32)Connectedness.N___) == cast(i32)Connectedness.N___
 			connected_E : bool = (w[right] & cast(i32)Connectedness._W__) == cast(i32)Connectedness._W__
 
-			if index == 0 {
-				w[index] = rl.GetRandomValue(0,15)
+			if connected_N {
+				w[index] = (cast(i32)Connectedness.N___)
 			}
-			if index >= 0 {
-				if connected_N {
-					w[index] = (cast(i32)Connectedness.N___)
-				}
-				if connected_W {
-					w[index] = w[index] | cast(i32)Connectedness._W__
-				}
-				// if connected_S {
-				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.__S_
-				// }
-				// if connected_E {
-				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.___E
-				// }
-				w[index] |= rl.GetRandomValue(0,3)
+			if connected_W {
+				w[index] = w[index] | cast(i32)Connectedness._W__
 			}
+			// if connected_S {
+			// 	w[index] = w[index] | cast(i32)Connectedness.__S_
+			// }
+			// if connected_E {
+			// 	w[index] = w[index] | cast(i32)Connectedness.___E
+			// }
+			w[index] |= rl.GetRandomValue(0,3)
 			
+			if(x == world.width - 1) {
+				// w[index - world.width + 1] |= (w[index] | cast(i32)Connectedness.___E)
+			}
 		}
 	}
+
 	for i:i32 = 0; i < world.size; i+=1 {
 		t[i] = getSourceRect(w[i])
 	}
@@ -104,7 +103,7 @@ generate :: proc(world : World) -> []rl.Rectangle {
 
 main :: proc() {
 	window := Window{"wang maze", 768, 768}
-	world := World{ 12, 12, 12 * 12, make([]i32, 12 * 12) }
+	world := World{ 13, 13, 13 * 13, make([]i32, 13 * 13) }
 
 	// rl.SetRandomSeet(48)
 
@@ -128,8 +127,8 @@ main :: proc() {
 		rl.ClearBackground(rl.BLACK)
 
 		for i : i32 = 0; i < world.size; i += 1 {
-			x : f32 = f32(i % world.width) * 64
-			y : f32 = f32(i / world.height) * 64
+			x : f32 = f32(i % world.width) * 64 - 32
+			y : f32 = f32(i / world.height) * 64 - 32
 			rl.DrawTextureRec(tilemap, tiles[i], {x, y}, rl.WHITE)
 		}
 
