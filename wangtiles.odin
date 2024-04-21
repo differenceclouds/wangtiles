@@ -76,9 +76,9 @@ generate :: proc(world : World) -> []rl.Rectangle {
 			connected_E : bool = (w[right] & cast(i32)Connectedness._W__) == cast(i32)Connectedness._W__
 
 			if index == 0 {
-				w[index] = cast(i32)Connectedness.__SE
+				w[index] = rl.GetRandomValue(0,15)
 			}
-			if index > 0 {
+			if index >= 0 {
 				if connected_N {
 					w[index] = (cast(i32)Connectedness.N___)
 				}
@@ -91,7 +91,7 @@ generate :: proc(world : World) -> []rl.Rectangle {
 				// if connected_E {
 				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.___E
 				// }
-				w[index] |= rl.GetRandomValue(0,2)
+				w[index] |= rl.GetRandomValue(0,3)
 			}
 			
 		}
