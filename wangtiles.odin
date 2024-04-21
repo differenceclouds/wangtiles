@@ -15,7 +15,7 @@ Coord :: struct {
 World :: struct {
     width:   i32,
     height:  i32,
-    size: i32,
+    size: 	i32,
     tile:   []i32,
 }
 
@@ -58,38 +58,32 @@ Connectedness :: enum {
 }
 
 
-generate :: proc(w : World) -> []rl.Rectangle {
-	t := make([]rl.Rectangle, w.size)
-	for y:i32 = 0; y < w.height; y += 1 {
-		for x:i32 = 0; x < w.width; x += 1 {
-			index := y * w.width + x
+generate :: proc(world : World) -> []rl.Rectangle {
+	t := make([]rl.Rectangle, world.size)
+	w := make([]i32, world.size)
+	for y:i32 = 0; y < world.height; y += 1 {
+		for x:i32 = 0; x < world.width; x += 1 {
+			index := y * world.width + x
 
-			left  := y * w.width + ((x - 1) %% w.width )
-			right := y * w.width + ((x + 1) %% w.width )
-			up    := ((y - 1) %% w.height ) * w.width + x
-			down  := ((y + 1) %% w.height ) * w.width + x
+			left  := y * world.width + ((x - 1) %% world.width )
+			right := y * world.width + ((x + 1) %% world.width )
+			up    := ((y - 1) %% world.height ) * world.width + x
+			down  := ((y + 1) %% world.height ) * world.width + x
 
-			connected_N : bool = (w.tile[up]   & cast(i32)Connectedness.__S_) == cast(i32)Connectedness.__S_
-			connected_W : bool = (w.tile[left] & cast(i32)Connectedness.___E) == cast(i32)Connectedness.___E
-			connected_S : bool = (w.tile[down] & cast(i32)Connectedness.N___) == cast(i32)Connectedness.N___
-			connected_E : bool = (w.tile[right] & cast(i32)Connectedness._W__) == cast(i32)Connectedness._W__
+			connected_N : bool = (w[up]   & cast(i32)Connectedness.__S_) == cast(i32)Connectedness.__S_
+			connected_W : bool = (w[left] & cast(i32)Connectedness.___E) == cast(i32)Connectedness.___E
+			connected_S : bool = (w[down] & cast(i32)Connectedness.N___) == cast(i32)Connectedness.N___
+			connected_E : bool = (w[right] & cast(i32)Connectedness._W__) == cast(i32)Connectedness._W__
 
-			// if index == 23 {
-			// 	w.tile[index] = 6
-			// 	w.tile[up] = 15
-			// 	w.tile[down] = 15
-			// 	w.tile[left] = 15
-			// 	w.tile[right] = 15
-			// }
 			if index == 0 {
-				w.tile[index] = cast(i32)Connectedness.__SE
+				w[index] = cast(i32)Connectedness.__SE
 			}
 			if index > 0 {
 				if connected_N {
-					w.tile[index] = (cast(i32)Connectedness.N___)
+					w[index] = (cast(i32)Connectedness.N___)
 				}
 				if connected_W {
-					w.tile[index] = w.tile[index] | cast(i32)Connectedness._W__
+					w[index] = w[index] | cast(i32)Connectedness._W__
 				}
 				// if connected_S {
 				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.__S_
@@ -97,13 +91,13 @@ generate :: proc(w : World) -> []rl.Rectangle {
 				// if connected_E {
 				// 	w.tile[index] = w.tile[index] | cast(i32)Connectedness.___E
 				// }
-				w.tile[index] |= rl.GetRandomValue(0,2)
+				w[index] |= rl.GetRandomValue(0,2)
 			}
 			
 		}
 	}
-	for i:i32 = 0; i < w.size; i+=1 {
-		t[i] = getSourceRect(w.tile[i])
+	for i:i32 = 0; i < world.size; i+=1 {
+		t[i] = getSourceRect(w[i])
 	}
 	return t
 }
