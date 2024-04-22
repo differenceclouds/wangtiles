@@ -7,26 +7,12 @@ Window :: struct {
     height:	i32,
 }
 
-Coord :: struct {
-	X: i32,
-	Y: i32
-}
-
 World :: struct {
     width:   i32,
     height:  i32,
     size: 	i32,
     tile:   []i32,
 }
-
-
-
-
-
-Tile :: struct {
-}
-
-
 
 getSourceRect :: proc(tile: i32) -> rl.Rectangle {
 	x : i32 = tile % 4
@@ -105,8 +91,6 @@ main :: proc() {
 	window := Window{"wang maze", 768, 768}
 	world := World{ 13, 13, 13 * 13, make([]i32, 13 * 13) }
 
-	// rl.SetRandomSeet(48)
-
 	rl.InitWindow(window.width, window.height, window.title)
 	defer rl.CloseWindow()
 	rl.SetTargetFPS(60)
@@ -131,7 +115,6 @@ main :: proc() {
 			y : f32 = f32(i / world.height) * 64 - 32
 			rl.DrawTextureRec(tilemap, tiles[i], {x, y}, rl.WHITE)
 		}
-
 
 		rl.EndDrawing()
 	}
