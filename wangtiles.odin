@@ -1,5 +1,6 @@
 package wangtiles
 import rl   "vendor:raylib"
+import time "core:time"
 
 Window :: struct { 
     title:	cstring,
@@ -12,12 +13,19 @@ World :: struct {
     height:  i32,
     size: 	i32,
     tile:   []i32,
+    mazeStyle: MazeStyle,
 }
 
 getSourceRect :: proc(tile: i32) -> rl.Rectangle {
 	x : i32 = tile % 4
 	y : i32 = tile / 4
 	return {f32(x * 64), f32(y * 64), 64, 64}
+}
+
+MazeStyle :: enum {
+	OpenRandom,
+	ClosedRandom,
+	OpenOffscreen,
 }
 
 //Tilesheet, Bitwise order
@@ -73,11 +81,23 @@ generate :: proc(world : World) -> []rl.Rectangle {
 			// if connected_E {
 			// 	w[index] = w[index] | cast(i32)Connectedness.___E
 			// }
-			w[index] |= rl.GetRandomValue(0,3)
-			
-			if(x == world.width - 1) {
-				// w[index - world.width + 1] |= (w[index] | cast(i32)Connectedness.___E)
+
+			switch world.mazeStyle {
+				case MazeStyle.OpenRandom:
+					if (x !=  world.width - 1 && y != world.height - 1) {
+						w[index] |= rl.GetRandomValue(0,3)
+					} else if (x ==  world.width - 1 && y != world.height - 1) {
+						w[index] |= rl.GetRandomValue(0,1) * 2
+					} else if (x !=  world.width - 1 && y == world.height - 1) {
+						w[index] |= rl.GetRandomValue(0,1)
+					}
+				case MazeStyle.ClosedRandom:
+					w[index] |= rl.GetRandomValue(0,3)
+				case MazeStyle.OpenOffscreen:
+				w[index] |= rl.GetRandomValue(0,3)
 			}
+
+			
 		}
 	}
 
@@ -89,7 +109,16 @@ generate :: proc(world : World) -> []rl.Rectangle {
 
 main :: proc() {
 	window := Window{"wang maze", 768, 768}
-	world := World{ 13, 13, 13 * 13, make([]i32, 13 * 13) }
+	mazeStyle := MazeStyle.OpenOffscreen
+	width : i32 = window.width / 64
+	height : i32 = window.height / 64
+	if mazeStyle == MazeStyle.OpenOffscreen {
+		width += 1
+		height += 1
+	}
+	size : i32 = width * height
+	world := World{ width, height, size, make([]i32, size), mazeStyle }
+
 
 	rl.InitWindow(window.width, window.height, window.title)
 	defer rl.CloseWindow()
@@ -111,9 +140,19 @@ main :: proc() {
 		rl.ClearBackground(rl.BLACK)
 
 		for i : i32 = 0; i < world.size; i += 1 {
-			x : f32 = f32(i % world.width) * 64 - 32
-			y : f32 = f32(i / world.height) * 64 - 32
-			rl.DrawTextureRec(tilemap, tiles[i], {x, y}, rl.WHITE)
+			switch world.mazeStyle {
+				case .ClosedRandom, .OpenRandom:
+					x : f32 = f32(i % world.width) * 64 - 8
+					y : f32 = f32(i / world.height) * 64 - 8
+					rl.DrawTextureRec(tilemap, tiles[i], {x, y}, rl.WHITE)
+				case .OpenOffscreen:
+					x : f32 = f32(i % world.width) * 64 - 40
+					y : f32 = f32(i / world.height) * 64 - 40
+					rl.DrawTextureRec(tilemap, tiles[i], {x, y}, rl.WHITE)
+			}
+
+
+			
 		}
 
 		rl.EndDrawing()
